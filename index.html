@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,14 +11,16 @@
     <br>
     <!--<img id="blackWhitePreview" alt="Чорно-біла картинка"> -->
     <canvas id="blackWhiteCanvas"></canvas>
+    <canvas id="contourCanvas"></canvas>
     <button id="submitBtn">Submit</button>
 
     <script>
         let fileInput = document.getElementById('fileInput');
         let imagePreview = document.getElementById('imagePreview');
-        let blackWhitePreview = document.getElementById('blackWhitePreview');
         let blackWhiteCanvas = document.getElementById('blackWhiteCanvas');
+        let contourCanvas = document.getElementById('contourCanvas');
         let ctx = blackWhiteCanvas.getContext('2d');
+        let contourCtx = contourCanvas.getContext('2d');
         let submitBtn = document.getElementById('submitBtn');
         let imgSrc = null;
 
@@ -53,9 +56,49 @@
 
                 ctx.putImageData(imageData, 0, 0);
 
-                blackWhitePreview.src = blackWhiteCanvas.toDataURL();
+                let sobelData = sobel(imageData);
+                contourCanvas.width = img.width;
+                contourCanvas.height = img.height;
+                contourCtx.putImageData(sobelData, 0, 0);
             };
         });
+
+        function sobel(imageData) {
+            let data = imageData.data;
+            let width = imageData.width;
+            let height = imageData.height;
+            let sobelData = ctx.createImageData(width, height);
+
+            for (let y = 1; y < height - 1; y++) {
+                for (let x = 1; x < width - 1; x++) {
+                    let gx = 0;
+                    let gy = 0;
+
+                    gx += (-1) * data[((y - 1) * width + (x - 1)) * 4];
+                    gx += (-2) * data[((y - 1) * width + x) * 4];
+                    gx += (-1) * data[((y - 1) * width + (x + 1)) * 4];
+                    gx += 1 * data[((y + 1) * width + (x - 1)) * 4];
+                    gx += 2 * data[((y + 1) * width + x) * 4];
+                    gx += 1 * data[((y + 1) * width + (x + 1)) * 4];
+
+                    gy += (-1) * data[((y - 1) * width + (x - 1)) * 4];
+                    gy += (-2) * data[(y * width + (x - 1)) * 4];
+                    gy += (-1) * data[((y + 1) * width + (x - 1)) * 4];
+                    gy += 1 * data[((y - 1) * width + (x + 1)) * 4];
+                    gy += 2 * data[(y * width + (x + 1)) * 4];
+                    gy += 1 * data[((y + 1) * width + (x + 1)) * 4];
+
+                    let gradient = Math.sqrt(gx * gx + gy * gy);
+
+                    sobelData.data[(y * width + x) * 4] = gradient;
+                    sobelData.data[(y * width + x) * 4 + 1] = gradient;
+                    sobelData.data[(y * width + x) * 4 + 2] = gradient;
+                    sobelData.data[(y * width + x) * 4 + 3] = 255; 
+                }
+            }
+
+            return sobelData;
+        }
     </script>
 </body>
 </html>
