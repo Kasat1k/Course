@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Перетворення на Чорно-білу</title>
+</head>
+<body>
+    <input type="file" id="fileInput">
+    <br>
+    <img id="imagePreview" alt="Обрана картинка">
+    <br>
+    <!--<img id="blackWhitePreview" alt="Чорно-біла картинка"> -->
+    <canvas id="blackWhiteCanvas"></canvas>
+    <button id="submitBtn">Submit</button>
+
+    <script>
+        let fileInput = document.getElementById('fileInput');
+        let imagePreview = document.getElementById('imagePreview');
+        let blackWhitePreview = document.getElementById('blackWhitePreview');
+        let blackWhiteCanvas = document.getElementById('blackWhiteCanvas');
+        let ctx = blackWhiteCanvas.getContext('2d');
+        let submitBtn = document.getElementById('submitBtn');
+        let imgSrc = null;
+
+        fileInput.addEventListener('change', function() {
+            let file = fileInput.files[0];
+            let reader = new FileReader();
+
+            reader.onload = function(e) {
+                imgSrc = e.target.result;
+                imagePreview.src = imgSrc;
+            };
+
+            reader.readAsDataURL(file);
+        });
+
+        submitBtn.addEventListener('click', function() {
+            let img = new Image();
+            img.src = imgSrc;
+            img.onload = function() {
+                blackWhiteCanvas.width = img.width;
+                blackWhiteCanvas.height = img.height;
+                ctx.drawImage(img, 0, 0);
+
+                let imageData = ctx.getImageData(0, 0, blackWhiteCanvas.width, blackWhiteCanvas.height);
+                let data = imageData.data;
+
+                for (let i = 0; i < data.length; i += 4) {
+                    let avg = (data[i] + data[i + 1] + data[i + 2]) / 3;
+                    data[i] = avg;
+                    data[i + 1] = avg;
+                    data[i + 2] = avg;
+                }
+
+                ctx.putImageData(imageData, 0, 0);
+
+                blackWhitePreview.src = blackWhiteCanvas.toDataURL();
+            };
+        });
+    </script>
+</body>
+</html>
